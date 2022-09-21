@@ -2,6 +2,7 @@
 import socket, argparse
 from itertools import cycle
 from params import (UDP_PORT, UDP_PLD_LEN, UDP_STRUCT, FILE_SIZE)
+from sock_ext import setsockopt
 
 AC0_TOS = 200
 AC1_TOS = 150
@@ -37,11 +38,14 @@ def main(target_addr:tuple, file_size:int, N:int, M:int):
     params = {'N':AC2_TOS, 'M':AC1_TOS}
     ##
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.setsockopt(socket.IPPROTO_IP, socket.IP_TOS, params[switch.indicator])
+    # sock.setsockopt(socket.IPPROTO_IP, socket.IP_TOS, params[switch.indicator])
+    setsockopt( sock.fileno(), params[switch.indicator] )
     ##
     for idx,_ in enumerate(range(0, file_size, UDP_PLD_LEN)):
         if switch.toggle():
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_TOS, params[switch.indicator])
+            # sock.setsockopt(socket.IPPROTO_IP, socket.IP_TOS, params[switch.indicator])
+            ret = setsockopt( sock.fileno(), params[switch.indicator] )
+            assert(ret==0)
         ##
         packet = UDP_PACKET(idx)
         sock.sendto(packet, target_addr)
